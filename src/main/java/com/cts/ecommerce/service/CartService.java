@@ -23,32 +23,39 @@ public class CartService {
     @Autowired
     private OrderService orderService;
 
-    public double checkout(Long cartId) {
+    //  username passed directly from frontend
+    public double checkout(Long cartId, String username) {
 
+        // Get cart
         Cart cart = cartRepo.findById(cartId).orElseThrow();
 
+        //  Calculate subtotal
         double total = 0;
-
         for (CartItem item : cart.getItems()) {
             total += item.getPrice() * item.getQuantity();
         }
 
-        // ✅ Apply Coupon Validation
+        //  Apply Coupon Discount
         if (cart.getCouponCode() != null) {
-
-            Coupon coupon = couponRepo.findById(cart.getCouponCode()).orElse(null);
+            Coupon coupon = couponRepo
+                    .findById(cart.getCouponCode())
+                    .orElse(null);
 
             if (couponValidationService.isValid(coupon, total)) {
-
                 total = total - (total * coupon.getValue() / 100);
             }
         }
 
-        // ✅ Apply Strategy Discounts
+        //  Apply Strategy Discounts via Discount Engine
         total = discountEngine.applyDiscounts(cart, total);
 
-        // ✅ Create Order
-        orderService.createOrder(total, "testUser");
+        //  Use real username from frontend or fallback to guest
+        String finalUsername = (username != null && !username.trim().isEmpty())
+                ? username.trim()
+                : "guest";
+
+        //  Create Order with real username
+        orderService.createOrder(total, finalUsername);
 
         return total;
     }

@@ -21,11 +21,13 @@ public class CartController {
     @Autowired
     private CartService cartService;
 
+    //  Create cart
     @PostMapping("/create")
     public Cart createCart() {
         return cartRepo.save(new Cart());
     }
 
+    //  Get cart
     @GetMapping("/{id}")
     public Cart getCart(@PathVariable Long id) {
         return cartRepo.findById(id)
@@ -33,8 +35,10 @@ public class CartController {
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart not found"));
     }
 
+    // Add item
     @PostMapping("/{id}/add")
-    public Cart addItem(@PathVariable Long id, @RequestBody CartItem item) {
+    public Cart addItem(@PathVariable Long id,
+                        @RequestBody CartItem item) {
         Cart cart = cartRepo.findById(id)
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart not found"));
@@ -42,8 +46,10 @@ public class CartController {
         return cartRepo.save(cart);
     }
 
+    // Remove item
     @DeleteMapping("/{id}/remove/{itemId}")
-    public Cart removeItem(@PathVariable Long id, @PathVariable Long itemId) {
+    public Cart removeItem(@PathVariable Long id,
+                           @PathVariable Long itemId) {
         Cart cart = cartRepo.findById(id)
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart not found"));
@@ -51,6 +57,7 @@ public class CartController {
         return cartRepo.save(cart);
     }
 
+    // Apply coupon
     @PostMapping("/{id}/applyCoupon/{code}")
     public Cart applyCoupon(@PathVariable Long id,
                             @PathVariable String code) {
@@ -61,6 +68,7 @@ public class CartController {
         return cartRepo.save(cart);
     }
 
+    //  Get total
     @GetMapping("/{id}/total")
     public double getTotal(@PathVariable Long id) {
         Cart cart = cartRepo.findById(id)
@@ -71,8 +79,10 @@ public class CartController {
                 .sum();
     }
 
+    // Checkout — accepts username from frontend as query param
     @GetMapping("/{id}/checkout")
-    public double checkout(@PathVariable Long id) {
-        return cartService.checkout(id);
+    public double checkout(@PathVariable Long id,
+                           @RequestParam(required = false, defaultValue = "guest") String username) {
+        return cartService.checkout(id, username);
     }
 }
